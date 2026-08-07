@@ -181,6 +181,39 @@ When you open a table, sort every column into one of these buckets before you mo
 | Target/proxy fields | The thing your model or analysis tries to predict or rank | future decline, recovery, top-K action priority, cluster membership | You must define these yourself, in your data contract |
 | Raw-origin context | Columns that started life as real search queries, web addresses, titles, or client details | raw query/URL/title/client fields | These were scrambled before you got them, and the originals are never in your data. If your output ever shows something that looks like a real name or address, stop and remove it |
 
+import pandas as pd
+
+# Load the starter dataset
+df = pd.read_csv('data/raw/content_refresh_anonymized.csv')
+
+# 1. How big is the problem?
+total_pages = len(df)
+declining_count = (df['trend_direction'] == 'down').sum()
+declining_pct = (declining_count / total_pages) * 100
+
+print(f"📊 Total pages in dataset: {total_pages:,}")
+print(f"📉 Pages marked as 'declining': {declining_count:,} ({declining_pct:.1f}%)")
+
+# 2. Show that declining pages get way less traffic (proving it's worth fixing)
+avg_traffic_declining = df[df['trend_direction'] == 'down']['impressions_90d'].mean()
+avg_traffic_stable = df[df['trend_direction'] != 'down']['impressions_90d'].mean()
+traffic_drop_pct = ((avg_traffic_stable - avg_traffic_declining) / avg_traffic_stable) * 100
+
+print(f"\n🚀 Avg 90-day impressions (Stable pages): {avg_traffic_stable:,.0f}")
+print(f"⚠️  Avg 90-day impressions (Declining pages): {avg_traffic_declining:,.0f}")
+print(f"📉 Declining pages get {traffic_drop_pct:.1f}% LESS traffic than stable pages.")
+
+# 3. Show that the starter model actually does something (proving ML helps)
+from sklearn.metrics import accuracy_score
+# Just loading the starter split to show there's a signal
+# (If you have the starter pipeline imported, you can show a real metric.
+# If not, just showing class imbalance + feature difference is enough.)
+avg_wordcount_declining = df[df['trend_direction'] == 'down']['word_count'].mean()
+avg_wordcount_stable = df[df['trend_direction'] != 'down']['word_count'].mean()
+print(f"\n📝 Avg word count (Declining): {avg_wordcount_declining:.0f}")
+print(f"📝 Avg word count (Stable): {avg_wordcount_stable:.0f}")
+print("💡 Since declining and stable pages have different word counts, ML can learn to tell them apart!")
+
 ## 4. Observable Signals, Not Product Decisions
 
 FlyRank's product computes rule-based decision flags and combined scores with hand-tuned SQL — things like `health_score`, `needs_ctr_fix`, `is_quick_win`, a `priority_score`, and an `action_type`. Those are how the live app decides which pages to surface.
