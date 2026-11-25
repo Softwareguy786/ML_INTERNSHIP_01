@@ -1,0 +1,11 @@
+{
+  "random_split_f1_w05": 0.68,
+  "grouped_split_f1_w06": 0.661,
+  "grouped_f1_min_fold": 0.457,
+  "grouped_f1_max_fold": 0.799,
+  "baseline_rule_f1": 0.009,
+  "queue_size": 30000,
+  "refresh_now_count": 2406,
+  "refresh_now_share": 0.08,
+  "median_impressions_top100": 79706
+}
